@@ -392,6 +392,63 @@ func Test_ManagerUpdateAutonomous(t *testing.T) {
 		require.NotContains(t, updated.ObjectMeta.Annotations, "argocd.argoproj.io/refresh")
 		require.Equal(t, map[string]string{"foo": "bar"}, updated.Labels)
 	})
+
+	t.Run("Ignore owner references for autonomous mode", func(t *testing.T) {
+		incoming := &v1alpha1.Application{
+			ObjectMeta: v1.ObjectMeta{
+				Name:      "foobar",
+				Namespace: "argocd",
+				OwnerReferences: []v1.OwnerReference{
+					{
+						APIVersion: "argoproj.io/v1alpha1",
+						Kind:       "ApplicationSet",
+						Name:       "test-appset",
+						UID:        "test-uid",
+					},
+				},
+			},
+			Spec: v1alpha1.ApplicationSpec{
+				Source: &v1alpha1.ApplicationSource{
+					RepoURL:        "github.com",
+					TargetRevision: "HEAD",
+					Path:           ".",
+				},
+				Destination: v1alpha1.ApplicationDestination{
+					Server:    "in-cluster",
+					Namespace: "guestbook",
+				},
+			},
+		}
+		existing := &v1alpha1.Application{
+			ObjectMeta: v1.ObjectMeta{
+				Name:      "foobar",
+				Namespace: "cluster-1",
+			},
+			Spec: v1alpha1.ApplicationSpec{
+				Source: &v1alpha1.ApplicationSource{
+					RepoURL:        "github.com",
+					TargetRevision: "HEAD",
+					Path:           ".",
+				},
+				Destination: v1alpha1.ApplicationDestination{
+					Server:    "in-cluster",
+					Namespace: "guestbook",
+				},
+			},
+		}
+
+		appC, ai := fakeInformer(t, "", existing)
+		be := application.NewKubernetesBackend(appC, "", ai, true)
+		mgr, err := NewApplicationManager(be, "argocd")
+		require.NoError(t, err)
+		mgr.role = manager.ManagerRolePrincipal
+		updated, err := mgr.UpdateAutonomousApp(context.TODO(), "cluster-1", incoming)
+		require.NoError(t, err)
+		require.NotNil(t, updated)
+
+		assert.Nil(t, updated.OwnerReferences)
+		assert.Equal(t, "cluster-1", updated.Namespace)
+	})
 }
 
 func Test_ManagerUpdateOperation(t *testing.T) {

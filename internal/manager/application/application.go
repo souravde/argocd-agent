@@ -296,7 +296,7 @@ func (m *ApplicationManager) CompareSourceUID(ctx context.Context, incoming *v1a
 // when the agent is in autonomous mode. It will update changes to .spec and
 // .status fields along with syncing labels and annotations.
 //
-// Additionally, it will remove any .operation field from the incoming resource
+// Additionally, it will remove any .operation, .ownerReferences fields from the incoming resource
 // before the resource is being updated on the control plane.
 //
 // This method is usually only executed by the control plane for updates that
@@ -330,6 +330,7 @@ func (m *ApplicationManager) UpdateAutonomousApp(ctx context.Context, namespace 
 		existing.DeletionTimestamp = incoming.DeletionTimestamp
 		existing.DeletionGracePeriodSeconds = incoming.DeletionGracePeriodSeconds
 		existing.Finalizers = incoming.Finalizers
+		existing.OwnerReferences = nil
 		existing.Spec = incoming.Spec
 		existing.Status = *incoming.Status.DeepCopy()
 		existing.Operation = nil
@@ -367,10 +368,13 @@ func (m *ApplicationManager) UpdateAutonomousApp(ctx context.Context, namespace 
 			return nil, err
 		}
 
-		// Append remove operation for operation field if it exists. We neither
+		// Append remove operation, ownerReferences if it exists. We neither
 		// want nor need it on the control plane's resource.
 		if existing.Operation != nil {
 			patch = append(patch, jsondiff.Operation{Type: "remove", Path: "/operation"})
+		}
+		if existing.OwnerReferences != nil {
+			patch = append(patch, jsondiff.Operation{Type: "remove", Path: "/ownerReferences"})
 		}
 
 		return patch, nil
