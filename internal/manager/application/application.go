@@ -368,10 +368,13 @@ func (m *ApplicationManager) UpdateAutonomousApp(ctx context.Context, namespace 
 			return nil, err
 		}
 
-		// Append remove operation for operation field if it exists. We neither
+		// Append remove operation, ownerReferences if it exists. We neither
 		// want nor need it on the control plane's resource.
 		if existing.Operation != nil {
 			patch = append(patch, jsondiff.Operation{Type: "remove", Path: "/operation"})
+		}
+		if existing.OwnerReferences != nil {
+			patch = append(patch, jsondiff.OwnerReferences{Type: "remove", Path: "/ownerReferences"})
 		}
 
 		return patch, nil
