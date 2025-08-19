@@ -330,6 +330,9 @@ func (m *ApplicationManager) UpdateAutonomousApp(ctx context.Context, namespace 
 		existing.DeletionTimestamp = incoming.DeletionTimestamp
 		existing.DeletionGracePeriodSeconds = incoming.DeletionGracePeriodSeconds
 		existing.Finalizers = incoming.Finalizers
+		// Clear ownerReferences to prevent garbage collection on control-plane
+		// when ApplicationSets don't exist on control-plane
+		existing.OwnerReferences = nil
 		existing.Spec = incoming.Spec
 		existing.Status = *incoming.Status.DeepCopy()
 		existing.Operation = nil
@@ -349,6 +352,8 @@ func (m *ApplicationManager) UpdateAutonomousApp(ctx context.Context, namespace 
 				DeletionTimestamp:          incoming.DeletionTimestamp,
 				DeletionGracePeriodSeconds: incoming.DeletionGracePeriodSeconds,
 				Finalizers:                 incoming.Finalizers,
+				// Clear ownerReferences to prevent garbage collection on control-plane
+				OwnerReferences:            nil,
 			},
 			Spec:   incoming.Spec,
 			Status: incoming.Status,
@@ -358,6 +363,7 @@ func (m *ApplicationManager) UpdateAutonomousApp(ctx context.Context, namespace 
 				DeletionTimestamp:          existing.DeletionTimestamp,
 				DeletionGracePeriodSeconds: existing.DeletionGracePeriodSeconds,
 				Finalizers:                 existing.Finalizers,
+				OwnerReferences:            existing.OwnerReferences,
 			},
 			Spec:   existing.Spec,
 			Status: existing.Status,
