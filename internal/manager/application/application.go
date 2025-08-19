@@ -374,7 +374,7 @@ func (m *ApplicationManager) UpdateAutonomousApp(ctx context.Context, namespace 
 			patch = append(patch, jsondiff.Operation{Type: "remove", Path: "/operation"})
 		}
 		if existing.OwnerReferences != nil {
-			patch = append(patch, jsondiff.OwnerReferences{Type: "remove", Path: "/ownerReferences"})
+			patch = append(patch, jsondiff.Operation{Type: "remove", Path: "/ownerReferences"})
 		}
 
 		return patch, nil
