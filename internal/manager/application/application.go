@@ -296,7 +296,7 @@ func (m *ApplicationManager) CompareSourceUID(ctx context.Context, incoming *v1a
 // when the agent is in autonomous mode. It will update changes to .spec and
 // .status fields along with syncing labels and annotations.
 //
-// Additionally, it will remove any .operation field from the incoming resource
+// Additionally, it will remove any .operation, .ownerReferences fields from the incoming resource
 // before the resource is being updated on the control plane.
 //
 // This method is usually only executed by the control plane for updates that
@@ -330,8 +330,6 @@ func (m *ApplicationManager) UpdateAutonomousApp(ctx context.Context, namespace 
 		existing.DeletionTimestamp = incoming.DeletionTimestamp
 		existing.DeletionGracePeriodSeconds = incoming.DeletionGracePeriodSeconds
 		existing.Finalizers = incoming.Finalizers
-		// Clear ownerReferences to prevent garbage collection on control-plane
-		// when ApplicationSets don't exist on control-plane
 		existing.OwnerReferences = nil
 		existing.Spec = incoming.Spec
 		existing.Status = *incoming.Status.DeepCopy()
@@ -352,8 +350,6 @@ func (m *ApplicationManager) UpdateAutonomousApp(ctx context.Context, namespace 
 				DeletionTimestamp:          incoming.DeletionTimestamp,
 				DeletionGracePeriodSeconds: incoming.DeletionGracePeriodSeconds,
 				Finalizers:                 incoming.Finalizers,
-				// Clear ownerReferences to prevent garbage collection on control-plane
-				OwnerReferences:            nil,
 			},
 			Spec:   incoming.Spec,
 			Status: incoming.Status,
@@ -363,7 +359,6 @@ func (m *ApplicationManager) UpdateAutonomousApp(ctx context.Context, namespace 
 				DeletionTimestamp:          existing.DeletionTimestamp,
 				DeletionGracePeriodSeconds: existing.DeletionGracePeriodSeconds,
 				Finalizers:                 existing.Finalizers,
-				OwnerReferences:            existing.OwnerReferences,
 			},
 			Spec:   existing.Spec,
 			Status: existing.Status,
