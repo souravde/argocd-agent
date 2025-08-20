@@ -660,6 +660,7 @@ func (s *Server) loadTLSConfig() (*tls.Config, error) {
 
 	tlsConfig := &tls.Config{
 		Certificates: []tls.Certificate{cert},
+		NextProtos:   []string{"h2", "http/1.1"},
 	}
 
 	// If the server is configured to require client certificates, set up the
