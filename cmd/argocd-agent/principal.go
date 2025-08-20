@@ -418,6 +418,7 @@ func getResourceProxyTLSConfigFromKube(kubeClient *kube.KubernetesClient, namesp
 		},
 		ClientAuth: tls.RequireAndVerifyClientCert,
 		ClientCAs:  clientCA,
+		NextProtos: []string{"h2", "http/1.1"},
 	}
 
 	return proxyTLS, nil
@@ -442,6 +443,7 @@ func getResourceProxyTLSConfigFromFiles(certPath, keyPath, caPath string) (*tls.
 		},
 		ClientAuth: tls.RequireAndVerifyClientCert,
 		ClientCAs:  clientCA,
+		NextProtos: []string{"h2", "http/1.1"},
 	}
 
 	return proxyTLS, nil
